@@ -1,16 +1,40 @@
-# calculadora_imc
+# Calculadora de IMC
 
-A new Flutter project.
+Aplicativo de uma calculadora de IMC criado para disciplina de Programação Mobile.
 
-## Getting Started
+<p align="center">
+    <img src="https://github.com/kleberandrade/calculadora-imc-aulas-flutter/blob/master/images/screenshot_1.png" height="400"/>
+    <img src="https://github.com/kleberandrade/calculadora-imc-aulas-flutter/blob/master/images/screenshot_2.png" height="400"/>
+    <img src="https://github.com/kleberandrade/calculadora-imc-aulas-flutter/blob/master/images/screenshot_3.png" height="400"/>
+</p>
 
-This project is a starting point for a Flutter application.
+## Desafio para aula
 
-A few resources to get you started if this is your first Flutter project:
+* Adicionar botões (toggle ou radio button) para escolha do gênero;
+* Corrigir o calculo de acordo com o gênero;
+* Criar um classe Pessoa com os atributos (peso, altura e genero), criar métodos para calcular IMC e classificar;
+* Refatorar o código do aplicativo para utilizar a classe Pessoa;
+* Aplicar uma escala de cores para o resultado da classificação do IMC;
+* Aumentar o texto do resultado do IMC (número) e também colocar em negrito.
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+## Licença
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+    Copyright 2019 Kleber de Oliveira Andrade
+    
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+    
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+    
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
