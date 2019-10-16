@@ -3,9 +3,9 @@
 Aplicativo de uma calculadora de IMC criado para disciplina de Programação Mobile.
 
 <p align="center">
-    <img src="C:\Users\Matheus Estoque\calculadora-imc-aulas-flutter\images/screenshot_1.png" height="400"/>
-	<img src="C:\Users\Matheus Estoque\calculadora-imc-aulas-flutter\images/screenshot_2.png" height="400"/>
-	<img src="C:\Users\Matheus Estoque\calculadora-imc-aulas-flutter\images/screenshot_3.png" height="400"/>
+    <img src="https://lh3.googleusercontent.com/6PH_BlAvl3rrdpRg_s-kasUpqwmUusGPHc1CdnkTdxBCtKblfV9UPhhO77hbQlh1lA=w1920-h920-rw" height="400"/>
+	<img src="https://lh3.googleusercontent.com/v5aR7Kn1iGZUyMn6KBqa-CZwsAJIDl5r1pDWE1N8pJIHuaz59n3JFsZlxojWxMpuFg=w1920-h920-rw" height="400"/>
+	<img src="https://lh3.googleusercontent.com/-CD8UBM67GGWboN56JZ_Ywz-BKaVYmra_qtqOT2soOR-4b9djfrGn76N6N3Mas_IdA=w1920-h920-rw" height="400"/>
 </p>
 
 ## Desafio para aula
