@@ -8,20 +8,20 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
+<<<<<<< nova-branche
 
+=======
+>>>>>>> local
 class Pessoa{
   double peso = 0.0;
   double altura = 0.0;
   int genero = 0;
-
   double calcularIMC(){
     return this.peso / (this.altura/100 * this.altura/100);
   }
-
   Color buscarCorIdeal(double imc
 ) {
-    
-   
+     
     Color cor;
     if (this.genero == 0){
       if (imc < 20.7)
@@ -101,9 +101,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin
  {
-
   TabController controller;
-
   TextEditingController _weightController = TextEditingController();
   TextEditingController _heightController = TextEditingController();
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -147,18 +145,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin
     setState((){
       if (isResultOnScreen){
         usuario.genero = value;
-
         imcMessage = usuario.classificar(usuario.calcularIMC());
         imcNumber = usuario.calcularIMC().toStringAsPrecision(3);
         imcColor = usuario.buscarCorIdeal(usuario.calcularIMC());
-        
         
       }
     });
     usuario.genero = value;
   }
 
-  TextFormField customMeme(String label, String warning, TextEditingController controller) {
+  TextFormField insertDados(String label, String warning, TextEditingController controller) {
 
     return TextFormField(
       keyboardType: TextInputType.number,
@@ -184,8 +180,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin
         
           backgroundColor: Colors.deepOrange,
           actions: <Widget>[
-
-  
             IconButton(
               icon: Icon(Icons.refresh),
               onPressed: () {
@@ -229,12 +223,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin
 
                       ],),
 
-                    customMeme("Altura (cm)", "Digite uma altura!", _heightController),
+                    insertDados("Altura (cm)", "Digite uma altura!", _heightController),
                     Padding(padding: EdgeInsets.only(top: 8.0),),
-                    customMeme("Peso (kg)", "Digite um peso!", _weightController),
-
-
-
+                    insertDados("Peso (kg)", "Digite um peso!", _weightController),
                     Padding(
                         padding: EdgeInsets.only(top: 8.0),
                         child: Text(imcNumber, textAlign: TextAlign.center, style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold))
