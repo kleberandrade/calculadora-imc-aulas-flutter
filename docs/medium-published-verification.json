@@ -1,0 +1,62 @@
+{
+  "captions": [
+    "Capa conceitual criada com IA para esta edição; não é uma captura do aplicativo.",
+    "Aplicativo real: build web de produção no Chrome. O número exibido é arredondado; a classificação usa o valor completo.",
+    "Recuperação real após reinício: erros associados aos campos, sem travar o aplicativo.",
+    "Layout responsivo do app real no navegador. A altura foi informada em metros e o cálculo foi enviado pelo teclado."
+  ],
+  "exerciseCount": 5,
+  "featuredImage": "https://miro.medium.com/v2/resize:fit:1200/0*L5KIhvmK76kzOVM5.png",
+  "images": [
+    {
+      "alt": "Ilustração conceitual de uma calculadora, uma régua e um formulário com marca de validação.",
+      "loaded": true,
+      "src": "https://miro.medium.com/v2/resize:fit:720/format:webp/0*L5KIhvmK76kzOVM5.png"
+    },
+    {
+      "alt": "Captura real do aplicativo no Chrome com 70,5 kg, 175 cm e IMC 23,0, em painéis lado a lado.",
+      "loaded": true,
+      "src": "https://miro.medium.com/v2/resize:fit:720/format:webp/0*Uw2wt88hph0fhMoB.jpg"
+    },
+    {
+      "alt": "Captura real da calculadora com mensagens de número inválido nos dois campos vazios e sem resultado antigo.",
+      "loaded": true,
+      "src": "https://miro.medium.com/v2/resize:fit:720/format:webp/0*00n_E9li6bedh2NT.jpg"
+    },
+    {
+      "alt": "Captura real do mesmo build web em viewport estreita, com cartão de resultado empilhado e explicação da fórmula.",
+      "loaded": true,
+      "src": "https://miro.medium.com/v2/resize:fit:640/format:webp/0*oM5W-Qiq-U1ZSmxt.jpg"
+    }
+  ],
+  "lastTeachingHeading": "Cinco exercícios práticos",
+  "title": "Desenvolvendo meu primeiro aplicativo com Flutter",
+  "versions": [
+    "3.50.0",
+    "3.14.0",
+    "1.11.1",
+    "6.0.0"
+  ],
+  "url": "https://medium.com/flutter-comunidade-br/desenvolvendo-meu-primeiro-aplicativo-com-flutter-918a15e73a01?postPublishedType=repub",
+  "verifiedOn": "2026-11-17",
+  "codeBlocks": [
+    "IMC = pesoEmKg / (alturaEmMetros * alturaEmMetros)\n70.5 / (1.75 * 1.75) = 23.020408163265305",
+    "git clone https://github.com/kleberandrade/calculadora-imc-aulas-flutter.git\ncd calculadora-imc-aulas-flutter\nflutter --version\nflutter pub get --enforce-lockfile\nflutter run -d chrome",
+    "name: calculadora_imc\ndescription: An educational adult BMI calculator with validated metric inputs.\npublish_to: none\nversion: 2.0.0+2\nenvironment:\n  sdk: '>=3.14.0 <4.0.0'\n  flutter: '>=3.50.0'\ndependencies:\n  flutter:\n    sdk: flutter\n  material_ui: ^1.11.1\ndev_dependencies:\n  flutter_test:\n    sdk: flutter\n  flutter_lints: ^6.0.0\nflutter:\n  uses-material-design: true",
+    "/// Metric height units accepted at the input boundary.\nenum HeightUnit {\n  centimeters('cm', 100, 100, 250),\n  meters('m', 1, 1, 2.5);\n  const HeightUnit(this.symbol, this.divisor, this.minimum, this.maximum);\n  final String symbol;\n  final double divisor;\n  final double minimum;\n  final double maximum;\n}\n/// General CDC categories for adults 20+, not a diagnosis.\nenum BmiCategory {\n  underweight('Abaixo do peso', 'Menor que 18,5'),\n  healthyWeight('Peso saudável', '18,5 a menos de 25'),\n  overweight('Sobrepeso', '25 a menos de 30'),\n  obesityOne('Obesidade · classe 1', '30 a menos de 35'),\n  obesityTwo('Obesidade · classe 2', '35 a menos de 40'),\n  obesityThree('Obesidade · classe 3', '40 ou mais');\n  const BmiCategory(this.label, this.range);\n  final String label;\n  final String range;\n  static BmiCategory fromBmi(double bmi) {\n    if (!bmi.isFinite || bmi <= 0) {\n      throw ArgumentError.value(bmi, 'bmi', 'Must be finite and positive');\n    }\n    const thresholds = [18.5, 25.0, 30.0, 35.0, 40.0];\n    for (var i = 0; i < thresholds.length; i++) {\n      if (bmi < thresholds[i]) return values[i];\n    }\n    return obesityThree;\n  }\n}\n/// Validated, immutable values. UI input limits are operational, not medical.\nfinal class BodyMeasurements {\n  const BodyMeasurements._(this.weightKg, this.heightMeters);\n  factory BodyMeasurements.parse(\n    String weight,\n    String height,\n    HeightUnit unit,\n  ) {\n    return BodyMeasurements._(parseWeight(weight), parseHeight(height, unit));\n  }\n  final double weightKg;\n  final double heightMeters;\n  double get bmi => weightKg / (heightMeters * heightMeters);\n  BmiCategory get category => BmiCategory.fromBmi(bmi);\n  static double parseWeight(String text) => _parseNumber(text, 20, 500, 'kg');\n  static double parseHeight(String text, HeightUnit unit) =>\n      _parseNumber(text, unit.minimum, unit.maximum, unit.symbol) /\n      unit.divisor;\n  static double _parseNumber(String text, double min, double max, String unit) {\n    final normalized = text.trim().replaceAll(',', '.');\n    if (!RegExp(r'^\\d+(?:\\.\\d+)?$').hasMatch(normalized)) {\n      throw const FormatException(\n        'Informe um número; use vírgula ou ponto decimal.',\n      );\n    }\n    final value = double.tryParse(normalized);\n    if (value == null || !value.isFinite || value < min || value > max) {\n      final minimum = min\n          .toStringAsFixed(min == min.roundToDouble() ? 0 : 1)\n          .replaceAll('.', ',');\n      final maximum = max\n          .toStringAsFixed(max == max.roundToDouble() ? 0 : 1)\n          .replaceAll('.', ',');\n      throw FormatException('Use de $minimum a $maximum $unit.');\n    }\n    return value;\n  }\n}",
+    "import 'package:calculadora_imc/domain/bmi.dart';\nimport 'package:flutter_test/flutter_test.dart';\nvoid main() {\n  test('centimetres and metres agree', () {\n    final cm = BodyMeasurements.parse('70,5', '175', HeightUnit.centimeters);\n    final m = BodyMeasurements.parse('70.5', '1.75', HeightUnit.meters);\n    expect(cm.bmi, closeTo(23.020408163265305, 0.000000001));\n    expect(m.bmi, cm.bmi);\n    expect(cm.category, BmiCategory.healthyWeight);\n    expect(BmiCategory.fromBmi(24.99999), BmiCategory.healthyWeight);\n    expect(BmiCategory.fromBmi(25), BmiCategory.overweight);\n  });\n}",
+    "import 'package:material_ui/material_ui.dart';\nimport 'domain/bmi.dart';\nvoid main() => runApp(const BmiApp());\nclass BmiApp extends StatelessWidget {\n  const BmiApp({super.key});\n  @override\n  Widget build(BuildContext context) => MaterialApp(\n    title: 'Calculadora de IMC',\n    debugShowCheckedModeBanner: false,\n    theme: ThemeData(\n      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF006B64)),\n      scaffoldBackgroundColor: const Color(0xFFF6F7F4),\n      inputDecorationTheme: const InputDecorationTheme(\n        border: OutlineInputBorder(),\n        filled: true,\n        fillColor: Colors.white,\n        contentPadding: EdgeInsets.all(20),\n      ),\n    ),\n    home: const BmiPage(),\n  );\n}",
+    "void _calculate() {\n  setState(() => _submitted = true);\n  if (!_form.currentState!.validate()) {\n    setState(() => _result = null);\n    if (_validate(() => BodyMeasurements.parseWeight(_weight.text)) != null) {\n      _weightFocus.requestFocus();\n    } else {\n      _heightFocus.requestFocus();\n    }\n    return;\n  }\n  FocusScope.of(context).unfocus();\n  setState(() {\n    _result = BodyMeasurements.parse(_weight.text, _height.text, _unit);\n  });\n}\nvoid _reset() {\n  _form.currentState!.reset();\n  _weight.clear();\n  _height.clear();\n  setState(() {\n    _result = null;\n    _unit = HeightUnit.centimeters;\n    _submitted = false;\n  });\n  _weightFocus.requestFocus();\n}",
+    "flutter pub get --enforce-lockfile\ndart format --output=none --set-exit-if-changed lib test\nflutter analyze\nflutter test --coverage\nflutter build web --release"
+  ],
+  "exactCodeMatches": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ]
+}

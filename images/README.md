@@ -16,3 +16,7 @@ Flutter-generated launcher icons retain Flutter's upstream licensing. Existing p
 - `app-mobile-result-2026.jpg`: same narrow browser, height in metres and calculated result after keyboard submit.
 
 These are browser screenshots, not physical-device captures. Descriptive alt text and captions accompany the images in the revised lesson.
+
+## Publication evidence
+
+`medium-published-2026.jpg`, `medium-app-published-2026.jpg` and `medium-exercises-2026.jpg` show the actual public Medium page after republication. `github-about-2026.jpg` records the repository metadata view. These are verification captures; they do not replace the app screenshots or the conceptual cover.

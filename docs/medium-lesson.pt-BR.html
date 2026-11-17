@@ -41,19 +41,17 @@ flutter:
 <p>Widgets são descrições imutáveis da interface. Um StatelessWidget compõe a tela a partir dos dados recebidos; um StatefulWidget tem um objeto State que conserva o estado entre reconstruções. Column e Row organizam filhos, Padding cria espaçamento e LayoutBuilder permite escolher a composição conforme o espaço disponível. O cálculo não precisa conhecer esses componentes.</p>
 <h3>4. Modele e teste os dados antes da interface</h3>
 <p>Antes de implementar o domínio, escrevemos testes para fórmula, equivalência entre cm e m, vírgula decimal, limites de entrada e transições exatas. A primeira execução falhou porque o domínio ainda não existia. Isso registra o início do ciclo de teste, implementação e nova verificação; uma falha de ambiente não conta como evidência de regra incorreta.</p>
-<p>O arquivo abaixo é o <strong>conteúdo completo de lib/domain/bmi.dart</strong>. HeightUnit torna a unidade explícita; BodyMeasurements só pode ser criado pela fábrica que valida os dados. As propriedades são finais. A expressão regular aceita números decimais simples, e a conversão troca vírgula por ponto uma única vez na fronteira de entrada. Depois dessa fronteira, a fórmula recebe valores válidos.</p>
+<p>O arquivo abaixo é o <strong>conteúdo completo de lib/domain/bmi.dart</strong>, com linhas vazias suprimidas apenas para a formatação no Medium. HeightUnit torna a unidade explícita; BodyMeasurements só pode ser criado pela fábrica que valida os dados. As propriedades são finais. A expressão regular aceita números decimais simples, e a conversão troca vírgula por ponto uma única vez na fronteira de entrada. Depois dessa fronteira, a fórmula recebe valores válidos.</p>
 <pre>/// Metric height units accepted at the input boundary.
 enum HeightUnit {
   centimeters(&#x27;cm&#x27;, 100, 100, 250),
   meters(&#x27;m&#x27;, 1, 1, 2.5);
-
   const HeightUnit(this.symbol, this.divisor, this.minimum, this.maximum);
   final String symbol;
   final double divisor;
   final double minimum;
   final double maximum;
 }
-
 /// General CDC categories for adults 20+, not a diagnosis.
 enum BmiCategory {
   underweight(&#x27;Abaixo do peso&#x27;, &#x27;Menor que 18,5&#x27;),
@@ -62,11 +60,9 @@ enum BmiCategory {
   obesityOne(&#x27;Obesidade · classe 1&#x27;, &#x27;30 a menos de 35&#x27;),
   obesityTwo(&#x27;Obesidade · classe 2&#x27;, &#x27;35 a menos de 40&#x27;),
   obesityThree(&#x27;Obesidade · classe 3&#x27;, &#x27;40 ou mais&#x27;);
-
   const BmiCategory(this.label, this.range);
   final String label;
   final String range;
-
   static BmiCategory fromBmi(double bmi) {
     if (!bmi.isFinite || bmi &lt;= 0) {
       throw ArgumentError.value(bmi, &#x27;bmi&#x27;, &#x27;Must be finite and positive&#x27;);
@@ -78,11 +74,9 @@ enum BmiCategory {
     return obesityThree;
   }
 }
-
 /// Validated, immutable values. UI input limits are operational, not medical.
 final class BodyMeasurements {
   const BodyMeasurements._(this.weightKg, this.heightMeters);
-
   factory BodyMeasurements.parse(
     String weight,
     String height,
@@ -90,19 +84,14 @@ final class BodyMeasurements {
   ) {
     return BodyMeasurements._(parseWeight(weight), parseHeight(height, unit));
   }
-
   final double weightKg;
   final double heightMeters;
-
   double get bmi =&gt; weightKg / (heightMeters * heightMeters);
   BmiCategory get category =&gt; BmiCategory.fromBmi(bmi);
-
   static double parseWeight(String text) =&gt; _parseNumber(text, 20, 500, &#x27;kg&#x27;);
-
   static double parseHeight(String text, HeightUnit unit) =&gt;
       _parseNumber(text, unit.minimum, unit.maximum, unit.symbol) /
       unit.divisor;
-
   static double _parseNumber(String text, double min, double max, String unit) {
     final normalized = text.trim().replaceAll(&#x27;,&#x27;, &#x27;.&#x27;);
     if (!RegExp(r&#x27;^\d+(?:\.\d+)?$&#x27;).hasMatch(normalized)) {
@@ -127,7 +116,6 @@ final class BodyMeasurements {
 <p>A classificação percorre limiares ordenados. O uso de “menor que” faz 18,5 entrar na segunda categoria e 25 entrar na terceira, sem depender do texto arredondado. Para exercitar a API em um teste isolado, crie test/example_test.dart com este conteúdo completo, execute-o e remova-o depois se quiser evitar a duplicação dos testes já existentes:</p>
 <pre>import &#x27;package:calculadora_imc/domain/bmi.dart&#x27;;
 import &#x27;package:flutter_test/flutter_test.dart&#x27;;
-
 void main() {
   test(&#x27;centimetres and metres agree&#x27;, () {
     final cm = BodyMeasurements.parse(&#x27;70,5&#x27;, &#x27;175&#x27;, HeightUnit.centimeters);
@@ -142,14 +130,10 @@ void main() {
 <h3>5. Conecte o formulário ao domínio</h3>
 <p>Abra lib/main.dart no projeto clonado: ele contém a tela completa e executável. Os trechos seguintes são <strong>recortes explicativos desse arquivo</strong>; não substituem sozinhos o arquivo inteiro. O tema usa contraste, tipografia e espaçamento consistentes. Em telas largas o formulário e o resultado ficam lado a lado; em telas estreitas ou com texto muito ampliado, empilham-se em uma área rolável.</p>
 <pre>import &#x27;package:material_ui/material_ui.dart&#x27;;
-
 import &#x27;domain/bmi.dart&#x27;;
-
 void main() =&gt; runApp(const BmiApp());
-
 class BmiApp extends StatelessWidget {
   const BmiApp({super.key});
-
   @override
   Widget build(BuildContext context) =&gt; MaterialApp(
     title: &#x27;Calculadora de IMC&#x27;,
@@ -169,34 +153,33 @@ class BmiApp extends StatelessWidget {
 }</pre>
 <p>BmiPage é StatefulWidget porque guarda controladores de texto, focos, a unidade selecionada, o estado de validação e um resultado opcional. null significa que não há resultado válido. Os controladores e FocusNodes são criados uma vez no State e liberados em dispose; não devem ser recriados a cada build.</p>
 <p>Form recebe uma GlobalKey&lt;FormState&gt;. Cada TextFormField chama a mesma regra do domínio dentro de seu validator. _validate captura FormatException e devolve uma mensagem de campo, em vez de deixar a aplicação encerrar. O teclado numérico é apenas uma ajuda de entrada: colagem e teclado físico ainda exigem validação real.</p>
-<pre>  void _calculate() {
-    setState(() =&gt; _submitted = true);
-    if (!_form.currentState!.validate()) {
-      setState(() =&gt; _result = null);
-      if (_validate(() =&gt; BodyMeasurements.parseWeight(_weight.text)) != null) {
-        _weightFocus.requestFocus();
-      } else {
-        _heightFocus.requestFocus();
-      }
-      return;
+<pre>void _calculate() {
+  setState(() =&gt; _submitted = true);
+  if (!_form.currentState!.validate()) {
+    setState(() =&gt; _result = null);
+    if (_validate(() =&gt; BodyMeasurements.parseWeight(_weight.text)) != null) {
+      _weightFocus.requestFocus();
+    } else {
+      _heightFocus.requestFocus();
     }
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _result = BodyMeasurements.parse(_weight.text, _height.text, _unit);
-    });
+    return;
   }
-
-  void _reset() {
-    _form.currentState!.reset();
-    _weight.clear();
-    _height.clear();
-    setState(() {
-      _result = null;
-      _unit = HeightUnit.centimeters;
-      _submitted = false;
-    });
-    _weightFocus.requestFocus();
-  }</pre>
+  FocusScope.of(context).unfocus();
+  setState(() {
+    _result = BodyMeasurements.parse(_weight.text, _height.text, _unit);
+  });
+}
+void _reset() {
+  _form.currentState!.reset();
+  _weight.clear();
+  _height.clear();
+  setState(() {
+    _result = null;
+    _unit = HeightUnit.centimeters;
+    _submitted = false;
+  });
+  _weightFocus.requestFocus();
+}</pre>
 <p>Ao calcular, validamos primeiro. Se houver erro, removemos o resultado e focamos o primeiro campo inválido. Se estiver tudo certo, criamos BodyMeasurements e reconstruímos a apresentação com setState. O botão Reiniciar limpa o Form, os dois controladores, resultado e erros, restaura centímetros e devolve o foco ao peso. Os testes também verificam esse comportamento após uma tentativa inválida.</p>
 <p>Editar qualquer medida invalida o resultado anterior, evitando exibir um índice calculado com dados que já mudaram. Trocar centímetros por metros mantém o peso, limpa altura, resultado e erros, e pede nova altura; não reinterpretamos 175 como 175 metros. O teste dessa transição detectou e ajudou a corrigir um apagamento indevido do peso durante a implementação.</p>
 <p>A ação Próximo do teclado move o foco do peso para a altura; Concluir na altura calcula. Os botões têm nomes visíveis e a região de resultado possui liveRegion para anunciar mudanças a tecnologias assistivas. A categoria é escrita por extenso, sem depender de cores. Medidas ficam somente na memória da sessão e não são enviadas pelo aplicativo.</p>
