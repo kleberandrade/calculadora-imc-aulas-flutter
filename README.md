@@ -1,3 +1,44 @@
+# Flutter BMI Calculator
+
+[![Language: Dart](https://img.shields.io/badge/Language-Dart-0175C2)](https://github.com/kleberandrade/calculadora-imc-aulas-flutter/blob/master/pubspec.yaml)
+[![Framework: Flutter](https://img.shields.io/badge/Framework-Flutter-02569B)](https://github.com/kleberandrade/calculadora-imc-aulas-flutter/blob/master/pubspec.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-555555)](https://github.com/kleberandrade/calculadora-imc-aulas-flutter/blob/master/LICENSE)
+
+Flutter body-mass-index calculator used as a form and validation teaching example.
+
+## Getting started
+
+- Select a Flutter release whose bundled Dart SDK satisfies the manifest constraint, then run the commands below from the repository root.
+
+```sh
+flutter pub get
+flutter run
+```
+
+- If the app depends on Firebase or another external service, configure your own service project using the dependencies and original notes; credentials are not supplied by this guide.
+
+## Recorded requirements
+
+- Dart SDK constraint from [`pubspec.yaml`](https://github.com/kleberandrade/calculadora-imc-aulas-flutter/blob/master/pubspec.yaml): `>=2.1.0 <3.0.0`.
+
+## Repository map
+
+- [lib](https://github.com/kleberandrade/calculadora-imc-aulas-flutter/tree/master/lib)
+- [android](https://github.com/kleberandrade/calculadora-imc-aulas-flutter/tree/master/android)
+- [ios](https://github.com/kleberandrade/calculadora-imc-aulas-flutter/tree/master/ios)
+
+## Validation status
+
+This update documents the tracked source and project metadata. It does not certify a successful build, device test or compatibility with a current toolchain. Follow any project-specific validation instructions in the original material.
+
+## License and attribution
+
+See [LICENSE](https://github.com/kleberandrade/calculadora-imc-aulas-flutter/blob/master/LICENSE) and any notices accompanying third-party code and assets. This documentation update does not change licensing or authorship.
+
+---
+
+## Original project material
+
 # Calculadora de IMC
 
 Aplicativo de uma calculadora de IMC criado para disciplina de Programação Mobile.
