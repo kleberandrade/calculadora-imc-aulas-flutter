@@ -14,3 +14,10 @@
 - Replaced obsolete Android v1 embedding/Groovy and Objective-C host templates with Flutter 3.50 generated Android Kotlin/iOS Swift hosts, preserving both application identifiers. Added web as the primary executable validation target.
 - Read the correct Medium page and confirmed its author account exposes Edit story; opened the existing editor without changing article identity.
 - Generated a new conceptual cover using the built-in image tool and copied it into `images/cover-2026.png`. It is an illustration, not an app screenshot. Prompt recorded in images/README.md.
+
+## Build and runtime verification
+
+- `flutter analyze` passed with no issues after removing one redundant test import. `flutter build web --release` passed; Wasm compatibility dry run also succeeded, but Wasm was not claimed as an executed target.
+- Served only the project's release build on 127.0.0.1:8768. Used a dedicated Chrome tab to validate decimal comma, calculation, empty-field errors, reset, unit change preserving weight, metre input and keyboard submit. Inspected the responsive layout at 390×844 and saved four real screenshots. Restored the browser viewport after validation.
+- Rewrote the English README with actual setup, architecture, examples, operational/medical limits and explicitly unvalidated native targets. Preserved MIT and 2019 authorship.
+- Added reproducible CI for master with Flutter/lockfile pins. Checked current GitHub action releases and pinned their exact commits: checkout v7.0.1, flutter-action v2.23.0, upload-artifact v7.0.2. CI uploads artifacts only; no hosting deployment.

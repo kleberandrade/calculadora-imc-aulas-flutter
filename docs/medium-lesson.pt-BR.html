@@ -1,0 +1,227 @@
+<h1>Desenvolvendo meu primeiro aplicativo com Flutter</h1>
+<h2>Notas de aula do prof. Kleber de Oliveira Andrade · edição revisada em 17/11/2026</h2>
+<figure><img src="https://raw.githubusercontent.com/kleberandrade/calculadora-imc-aulas-flutter/master/images/cover-2026.png" alt="Ilustração conceitual de uma calculadora, uma régua e um formulário com marca de validação."><figcaption>Capa conceitual criada com IA para esta edição; não é uma captura do aplicativo.</figcaption></figure>
+<p>Vamos construir e compreender uma calculadora de índice de massa corporal (IMC) enquanto estudamos formulários, validação, estado e testes no Flutter. Ao final, você poderá explicar o caminho entre o texto digitado e o resultado, corrigir entradas inválidas e reiniciar a interface com segurança. O objetivo é aprender programação: este exemplo não substitui avaliação de saúde.</p>
+<p>Esta revisão preserva a aula de 2019 e sua autoria, mas substitui o caminho ativo por código com null safety, componentes atuais, domínio puro e testes. A fórmula e as categorias gerais adotadas não mudam por gênero. O antigo desafio que propunha essa alteração foi retirado por não corresponder à referência usada aqui.</p>
+<h3>1. Delimite o problema antes de desenhar a tela</h3>
+<p>Usaremos a referência geral do CDC para adultos de 20 anos ou mais, fora da gestação. O IMC relaciona peso e altura: peso em quilogramas dividido pela altura em metros ao quadrado. É uma medida de triagem; não é diagnóstico e não distingue músculo de gordura. Crianças, adolescentes e gestantes exigem critérios específicos, não implementados neste exemplo.</p>
+<pre>IMC = pesoEmKg / (alturaEmMetros * alturaEmMetros)
+70.5 / (1.75 * 1.75) = 23.020408163265305</pre>
+<p>As faixas gerais são: abaixo de 18,5; de 18,5 a menos de 25; de 25 a menos de 30; de 30 a menos de 35; de 35 a menos de 40; e 40 ou mais. A classificação usa o valor completo. Arredondamos somente a apresentação para uma casa decimal: 24,99999 pode aparecer como 25,0 e ainda pertencer à faixa anterior. A tela explica essa diferença.</p>
+<p>Para manter o exercício delimitado, aceitamos 20–500 kg e 100–250 cm, ou 1–2,5 m, incluindo os extremos. Esses são limites operacionais do software didático, não limites clínicos nem uma afirmação sobre toda a população adulta. Não fornecemos metas de peso ou aconselhamento personalizado.</p>
+<h3>2. Prepare uma instalação reproduzível</h3>
+<p>A versão validada é Flutter <strong>3.50.0</strong>, com Dart <strong>3.14.0</strong>. Instale essa versão pelo <a href="https://docs.flutter.dev/get-started/install">guia oficial</a>. Abra um terminal no VS Code ou em seu editor e obtenha o projeto completo. O comando de execução abaixo usa Chrome, plataforma realmente validada nesta revisão.</p>
+<pre>git clone https://github.com/kleberandrade/calculadora-imc-aulas-flutter.git
+cd calculadora-imc-aulas-flutter
+flutter --version
+flutter pub get --enforce-lockfile
+flutter run -d chrome</pre>
+<p>Confira o manifesto completo atual em pubspec.yaml. Não há Firebase, chave de API ou serviço externo para configurar. O pacote oficial material_ui substitui o import de compatibilidade material.dart, hoje descontinuado no caminho ativo desta aula. Removemos cupertino_icons, que o aplicativo não utilizava.</p>
+<pre>name: calculadora_imc
+description: An educational adult BMI calculator with validated metric inputs.
+publish_to: none
+version: 2.0.0+2
+environment:
+  sdk: &#x27;&gt;=3.14.0 &lt;4.0.0&#x27;
+  flutter: &#x27;&gt;=3.50.0&#x27;
+dependencies:
+  flutter:
+    sdk: flutter
+  material_ui: ^1.11.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true</pre>
+<p>O lockfile está versionado. material_color_utilities 0.13.0 e test_api 0.7.14 são versões fixadas pelo SDK: embora existam 0.13.1 e 0.7.15 no catálogo consultado, não devemos forçá-las com overrides incompatíveis. flutter pub outdated confirmou as demais dependências nas versões atuais compatíveis. Consulte docs/dependencies.md para a origem desses limites.</p>
+<h3>3. Entenda onde cada responsabilidade mora</h3>
+<p><strong>lib/domain/bmi.dart</strong> concentra unidades, leitura dos números, fórmula e classificação; não importa Flutter. <strong>lib/main.dart</strong> contém o tema, o formulário e os cartões. <strong>test/</strong> verifica as regras e a interação. <strong>web/</strong> contém o host validado no navegador; android/ e ios/ são hosts nativos regenerados com o SDK atual.</p>
+<p>pubspec.yaml declara dependências e requisitos; pubspec.lock registra as versões resolvidas. .dart_tool/package_config.json é gerado pelo gerenciador de pacotes: substitui o papel do antigo .packages, e não deve ser editado à mão. build/ contém saídas geradas. .metadata é mantido pelo Flutter. Evite copiar arquivos gerados de outra máquina.</p>
+<p>Widgets são descrições imutáveis da interface. Um StatelessWidget compõe a tela a partir dos dados recebidos; um StatefulWidget tem um objeto State que conserva o estado entre reconstruções. Column e Row organizam filhos, Padding cria espaçamento e LayoutBuilder permite escolher a composição conforme o espaço disponível. O cálculo não precisa conhecer esses componentes.</p>
+<h3>4. Modele e teste os dados antes da interface</h3>
+<p>Antes de implementar o domínio, escrevemos testes para fórmula, equivalência entre cm e m, vírgula decimal, limites de entrada e transições exatas. A primeira execução falhou porque o domínio ainda não existia. Isso registra o início do ciclo de teste, implementação e nova verificação; uma falha de ambiente não conta como evidência de regra incorreta.</p>
+<p>O arquivo abaixo é o <strong>conteúdo completo de lib/domain/bmi.dart</strong>. HeightUnit torna a unidade explícita; BodyMeasurements só pode ser criado pela fábrica que valida os dados. As propriedades são finais. A expressão regular aceita números decimais simples, e a conversão troca vírgula por ponto uma única vez na fronteira de entrada. Depois dessa fronteira, a fórmula recebe valores válidos.</p>
+<pre>/// Metric height units accepted at the input boundary.
+enum HeightUnit {
+  centimeters(&#x27;cm&#x27;, 100, 100, 250),
+  meters(&#x27;m&#x27;, 1, 1, 2.5);
+
+  const HeightUnit(this.symbol, this.divisor, this.minimum, this.maximum);
+  final String symbol;
+  final double divisor;
+  final double minimum;
+  final double maximum;
+}
+
+/// General CDC categories for adults 20+, not a diagnosis.
+enum BmiCategory {
+  underweight(&#x27;Abaixo do peso&#x27;, &#x27;Menor que 18,5&#x27;),
+  healthyWeight(&#x27;Peso saudável&#x27;, &#x27;18,5 a menos de 25&#x27;),
+  overweight(&#x27;Sobrepeso&#x27;, &#x27;25 a menos de 30&#x27;),
+  obesityOne(&#x27;Obesidade · classe 1&#x27;, &#x27;30 a menos de 35&#x27;),
+  obesityTwo(&#x27;Obesidade · classe 2&#x27;, &#x27;35 a menos de 40&#x27;),
+  obesityThree(&#x27;Obesidade · classe 3&#x27;, &#x27;40 ou mais&#x27;);
+
+  const BmiCategory(this.label, this.range);
+  final String label;
+  final String range;
+
+  static BmiCategory fromBmi(double bmi) {
+    if (!bmi.isFinite || bmi &lt;= 0) {
+      throw ArgumentError.value(bmi, &#x27;bmi&#x27;, &#x27;Must be finite and positive&#x27;);
+    }
+    const thresholds = [18.5, 25.0, 30.0, 35.0, 40.0];
+    for (var i = 0; i &lt; thresholds.length; i++) {
+      if (bmi &lt; thresholds[i]) return values[i];
+    }
+    return obesityThree;
+  }
+}
+
+/// Validated, immutable values. UI input limits are operational, not medical.
+final class BodyMeasurements {
+  const BodyMeasurements._(this.weightKg, this.heightMeters);
+
+  factory BodyMeasurements.parse(
+    String weight,
+    String height,
+    HeightUnit unit,
+  ) {
+    return BodyMeasurements._(parseWeight(weight), parseHeight(height, unit));
+  }
+
+  final double weightKg;
+  final double heightMeters;
+
+  double get bmi =&gt; weightKg / (heightMeters * heightMeters);
+  BmiCategory get category =&gt; BmiCategory.fromBmi(bmi);
+
+  static double parseWeight(String text) =&gt; _parseNumber(text, 20, 500, &#x27;kg&#x27;);
+
+  static double parseHeight(String text, HeightUnit unit) =&gt;
+      _parseNumber(text, unit.minimum, unit.maximum, unit.symbol) /
+      unit.divisor;
+
+  static double _parseNumber(String text, double min, double max, String unit) {
+    final normalized = text.trim().replaceAll(&#x27;,&#x27;, &#x27;.&#x27;);
+    if (!RegExp(r&#x27;^\d+(?:\.\d+)?$&#x27;).hasMatch(normalized)) {
+      throw const FormatException(
+        &#x27;Informe um número; use vírgula ou ponto decimal.&#x27;,
+      );
+    }
+    final value = double.tryParse(normalized);
+    if (value == null || !value.isFinite || value &lt; min || value &gt; max) {
+      final minimum = min
+          .toStringAsFixed(min == min.roundToDouble() ? 0 : 1)
+          .replaceAll(&#x27;.&#x27;, &#x27;,&#x27;);
+      final maximum = max
+          .toStringAsFixed(max == max.roundToDouble() ? 0 : 1)
+          .replaceAll(&#x27;.&#x27;, &#x27;,&#x27;);
+      throw FormatException(&#x27;Use de $minimum a $maximum $unit.&#x27;);
+    }
+    return value;
+  }
+}</pre>
+<p>Texto vazio, letras, zero, negativos, NaN, Infinity, números que transbordam, separadores misturados, notação científica e valores fora dos limites são rejeitados. Não removemos silenciosamente letras ou separadores: transformar uma entrada ambígua em outro número seria esconder o erro. Na unidade errada, 175 m e 1,75 cm também são recusados pelos limites.</p>
+<p>A classificação percorre limiares ordenados. O uso de “menor que” faz 18,5 entrar na segunda categoria e 25 entrar na terceira, sem depender do texto arredondado. Para exercitar a API em um teste isolado, crie test/example_test.dart com este conteúdo completo, execute-o e remova-o depois se quiser evitar a duplicação dos testes já existentes:</p>
+<pre>import &#x27;package:calculadora_imc/domain/bmi.dart&#x27;;
+import &#x27;package:flutter_test/flutter_test.dart&#x27;;
+
+void main() {
+  test(&#x27;centimetres and metres agree&#x27;, () {
+    final cm = BodyMeasurements.parse(&#x27;70,5&#x27;, &#x27;175&#x27;, HeightUnit.centimeters);
+    final m = BodyMeasurements.parse(&#x27;70.5&#x27;, &#x27;1.75&#x27;, HeightUnit.meters);
+    expect(cm.bmi, closeTo(23.020408163265305, 0.000000001));
+    expect(m.bmi, cm.bmi);
+    expect(cm.category, BmiCategory.healthyWeight);
+    expect(BmiCategory.fromBmi(24.99999), BmiCategory.healthyWeight);
+    expect(BmiCategory.fromBmi(25), BmiCategory.overweight);
+  });
+}</pre>
+<h3>5. Conecte o formulário ao domínio</h3>
+<p>Abra lib/main.dart no projeto clonado: ele contém a tela completa e executável. Os trechos seguintes são <strong>recortes explicativos desse arquivo</strong>; não substituem sozinhos o arquivo inteiro. O tema usa contraste, tipografia e espaçamento consistentes. Em telas largas o formulário e o resultado ficam lado a lado; em telas estreitas ou com texto muito ampliado, empilham-se em uma área rolável.</p>
+<pre>import &#x27;package:material_ui/material_ui.dart&#x27;;
+
+import &#x27;domain/bmi.dart&#x27;;
+
+void main() =&gt; runApp(const BmiApp());
+
+class BmiApp extends StatelessWidget {
+  const BmiApp({super.key});
+
+  @override
+  Widget build(BuildContext context) =&gt; MaterialApp(
+    title: &#x27;Calculadora de IMC&#x27;,
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF006B64)),
+      scaffoldBackgroundColor: const Color(0xFFF6F7F4),
+      inputDecorationTheme: const InputDecorationTheme(
+        border: OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: EdgeInsets.all(20),
+      ),
+    ),
+    home: const BmiPage(),
+  );
+}</pre>
+<p>BmiPage é StatefulWidget porque guarda controladores de texto, focos, a unidade selecionada, o estado de validação e um resultado opcional. null significa que não há resultado válido. Os controladores e FocusNodes são criados uma vez no State e liberados em dispose; não devem ser recriados a cada build.</p>
+<p>Form recebe uma GlobalKey&lt;FormState&gt;. Cada TextFormField chama a mesma regra do domínio dentro de seu validator. _validate captura FormatException e devolve uma mensagem de campo, em vez de deixar a aplicação encerrar. O teclado numérico é apenas uma ajuda de entrada: colagem e teclado físico ainda exigem validação real.</p>
+<pre>  void _calculate() {
+    setState(() =&gt; _submitted = true);
+    if (!_form.currentState!.validate()) {
+      setState(() =&gt; _result = null);
+      if (_validate(() =&gt; BodyMeasurements.parseWeight(_weight.text)) != null) {
+        _weightFocus.requestFocus();
+      } else {
+        _heightFocus.requestFocus();
+      }
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _result = BodyMeasurements.parse(_weight.text, _height.text, _unit);
+    });
+  }
+
+  void _reset() {
+    _form.currentState!.reset();
+    _weight.clear();
+    _height.clear();
+    setState(() {
+      _result = null;
+      _unit = HeightUnit.centimeters;
+      _submitted = false;
+    });
+    _weightFocus.requestFocus();
+  }</pre>
+<p>Ao calcular, validamos primeiro. Se houver erro, removemos o resultado e focamos o primeiro campo inválido. Se estiver tudo certo, criamos BodyMeasurements e reconstruímos a apresentação com setState. O botão Reiniciar limpa o Form, os dois controladores, resultado e erros, restaura centímetros e devolve o foco ao peso. Os testes também verificam esse comportamento após uma tentativa inválida.</p>
+<p>Editar qualquer medida invalida o resultado anterior, evitando exibir um índice calculado com dados que já mudaram. Trocar centímetros por metros mantém o peso, limpa altura, resultado e erros, e pede nova altura; não reinterpretamos 175 como 175 metros. O teste dessa transição detectou e ajudou a corrigir um apagamento indevido do peso durante a implementação.</p>
+<p>A ação Próximo do teclado move o foco do peso para a altura; Concluir na altura calcula. Os botões têm nomes visíveis e a região de resultado possui liveRegion para anunciar mudanças a tecnologias assistivas. A categoria é escrita por extenso, sem depender de cores. Medidas ficam somente na memória da sessão e não são enviadas pelo aplicativo.</p>
+<figure><img src="https://raw.githubusercontent.com/kleberandrade/calculadora-imc-aulas-flutter/master/images/app-desktop-2026.jpg" alt="Captura real do aplicativo no Chrome com 70,5 kg, 175 cm e IMC 23,0, em painéis lado a lado."><figcaption>Aplicativo real: build web de produção no Chrome. O número exibido é arredondado; a classificação usa o valor completo.</figcaption></figure>
+<h3>6. Confira resultado, erro e recuperação</h3>
+<p>Execute o app e digite 70,5 no peso e 175 na altura em cm. Confira 23,0 e Peso saudável. Mude para metros: o peso permanece, a altura deve ficar vazia e o resultado anterior desaparece. Digite 1,75 e conclua pelo teclado; o resultado deve ser equivalente. Reinicie e tente calcular com campos vazios: devem aparecer mensagens nos campos, sem exceção e sem resultado antigo.</p>
+<figure><img src="https://raw.githubusercontent.com/kleberandrade/calculadora-imc-aulas-flutter/master/images/app-validation-2026.jpg" alt="Captura real da calculadora com mensagens de número inválido nos dois campos vazios e sem resultado antigo."><figcaption>Recuperação real após reinício: erros associados aos campos, sem travar o aplicativo.</figcaption></figure>
+<p>Também valide a leitura em uma janela estreita e com fonte ampliada. A captura a seguir usa uma viewport de navegador de 390×844; ela não representa um teste físico de telefone. A rolagem conserva acesso ao formulário, aos botões e ao resultado.</p>
+<figure><img src="https://raw.githubusercontent.com/kleberandrade/calculadora-imc-aulas-flutter/master/images/app-mobile-result-2026.jpg" alt="Captura real do mesmo build web em viewport estreita, com cartão de resultado empilhado e explicação da fórmula."><figcaption>Layout responsivo do app real no navegador. A altura foi informada em metros e o cálculo foi enviado pelo teclado.</figcaption></figure>
+<h3>7. Execute as verificações do projeto</h3>
+<pre>flutter pub get --enforce-lockfile
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test --coverage
+flutter build web --release</pre>
+<p>A revisão passou por nove testes automatizados: cinco de domínio e quatro de widgets. Eles cobrem todas as transições, cm/m, decimal português, entradas inválidas, extremos, recuperação, reinício, teclado, tela de 360 px com texto a 200% e diretrizes de contraste, rótulos e área de toque. A análise ficou sem avisos e o build web de produção foi executado no Chrome em tamanho largo e estreito. O workflow no GitHub repete as verificações em master com o SDK fixado e o lockfile obrigatório.</p>
+<p>Os hosts Android e iOS foram atualizados, preservando seus identificadores, mas builds nativos e dispositivos físicos não foram validados nesta edição. Licenças Android pendentes não foram aceitas automaticamente. Para essas plataformas são necessários SDKs, ferramentas e, no iOS, assinatura apropriada. Não há deploy, publicação de pacote ou promessa de compatibilidade não testada. crapper, dryer e mutator instalados não suportam Dart; não atribuímos pontuações fictícias.</p>
+<h3>Referências, código e créditos</h3>
+<p><a href="https://github.com/kleberandrade/calculadora-imc-aulas-flutter">Repositório e fontes completos</a> · <a href="https://docs.flutter.dev/release/release-notes">Releases oficiais do Flutter</a> · <a href="https://pub.dev/packages/material_ui">Material UI oficial</a> · <a href="https://docs.flutter.dev/cookbook/forms/validation">Validação de formulários</a> · <a href="https://www.cdc.gov/bmi/adult-calculator/bmi-categories.html">Categorias adultas do CDC</a> · <a href="https://www.cdc.gov/bmi/faq/index.html">Fórmula e interpretação: CDC</a>. Referências conferidas em 17/11/2026.</p>
+<p>Aula de Kleber de Oliveira Andrade. Copyright 2019 Kleber de Oliveira Andrade; licença MIT original preservada no repositório. A capa é ilustração conceitual criada com IA; as outras três imagens são capturas novas do aplicativo real no Chrome. Assets gerados pelo Flutter e dependências conservam suas licenças. O material antigo permanece identificado em docs/medium-original-editor.html e nas imagens históricas, separado do caminho ativo.</p>
+<h3>Cinco exercícios práticos</h3>
+<ol>
+<li><strong>Limiares sem arredondamento.</strong> Objetivo: estender os testes de classificação. Critério de conclusão: adicionar casos imediatamente abaixo, no valor exato e acima de 18,5, 25, 30, 35 e 40; todos devem passar e uma mudança de &lt; para &lt;= deve ser detectada.</li>
+<li><strong>Validação compreensível.</strong> Objetivo: melhorar a experiência para uma entrada inválida sem mudar os limites. Critério de conclusão: escrever primeiro um teste para uma mensagem específica de campo vazio, implementar a mensagem e manter verdes os casos de letras, zero, negativos, não finitos e separadores misturados.</li>
+<li><strong>Conversão explícita de unidade.</strong> Objetivo: oferecer conversão opcional da altura ao trocar cm/m. Critério de conclusão: escrever primeiro testes para 175 cm ↔ 1,75 m, entrada inválida e resultado antigo; implementar a conversão sem perder peso e atualizar a ajuda da interface.</li>
+<li><strong>Acessibilidade do fluxo.</strong> Objetivo: verificar o caminho completo com teclado e leitor de tela. Critério de conclusão: registrar ordem de foco, anúncio de erro e de resultado, concluir um cálculo e reiniciar sem mouse; corrigir problemas e manter as diretrizes automatizadas aprovadas.</li>
+<li><strong>Explicação verificável do cálculo.</strong> Objetivo: mostrar a substituição das medidas na fórmula após um resultado válido. Critério de conclusão: exibir 70,5 ÷ (1,75 × 1,75) no exemplo, testar a equivalência entre cm e m e garantir que a explicação desapareça ao editar, trocar unidade ou reiniciar.</li>
+</ol>
